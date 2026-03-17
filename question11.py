@@ -1,21 +1,33 @@
 import cv2 as cv
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.linear_model import RANSACRegressor
+from sklearn.linear_model import LinearRegression
+img = cv.imread("crop_image.png", 0)
 
-img = cv.imread('crop_image.png')
-gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-edges = cv.Canny(gray, 550, 690)
-
+edges = cv.Canny(img, 550, 690)
 indices = np.where(edges != 0)
 x = indices[1]
 y = indices[0]
+X = x.reshape(-1, 1)
+ransac = RANSACRegressor(LinearRegression())
+ransac.fit(X, y)
+slope_r = ransac.estimator_.coef_[0]
+intercept_r = ransac.estimator_.intercept_
 
-x_reshaped = x.reshape(-1,1)
+theta_r = np.degrees(np.arctan(slope_r))
 
-ransac = RANSACRegressor()
-ransac.fit(x_reshaped, y)
+print("RANSAC angle =", theta_r)
 
-m_ransac = ransac.estimator_.coef_[0]
+x_line = np.linspace(min(x), max(x), 1000)
+y_line = slope_r * x_line + intercept_r
 
-theta_ransac = np.degrees(np.arctan(m_ransac))
-print("Estimated Angle (RANSAC):", theta_ransac)
+plt.figure(figsize=(8,6))
+plt.scatter(x, y, s=1, label="Edge Points")
+plt.plot(x_line, y_line, color='green', linewidth=2, label="RANSAC Line")
+plt.gca().invert_yaxis()
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Crop Field Direction Estimation using RANSAC")
+plt.legend()
+plt.show()

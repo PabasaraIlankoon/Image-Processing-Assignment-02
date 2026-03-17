@@ -1,15 +1,20 @@
 import cv2 as cv
 import numpy as np
+import matplotlib.pyplot as plt
 
-img = cv.imread('crop_image.png')
-gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-edges = cv.Canny(gray, 550, 690)
-
+img = cv.imread('crop_image.png',0)
+edges = cv.Canny(img,550,690)
 indices = np.where(edges != 0)
+
 x = indices[1]
 y = indices[0]
+m, b = np.polyfit(x, y, 1)
+y_fit = m*x + b
 
-m, c = np.polyfit(x, y, 1)
+theta = np.degrees(np.arctan(m))
+print("Estimated crop field angle =", theta, "degrees")
 
-theta_ls = np.degrees(np.arctan(m))
-print("Estimated Angle (Least Squares):", theta_ls)
+plt.scatter(x,y,s=1)
+plt.plot(x,y_fit,color='red')
+
+plt.show()
